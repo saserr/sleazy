@@ -20,11 +20,13 @@ import scala.reflect.ClassTag
 
 import scalaz.Equal
 
-case class Value[+A](private val x: A) {
+case class Value[+A: Show](private val x: A) {
+
+  private lazy val show: String = Show(x)
 
   def as[B](implicit ct: ClassTag[B]): B =
     if (is[B]) x.asInstanceOf[B]
-    else fail(s"$x is not a $ct")
+    else fail(s"$show is not a $ct")
 
   def is[B](implicit ct: ClassTag[B]): Boolean = ct.runtimeClass.isInstance(x)
 
@@ -36,5 +38,10 @@ case class Value[+A](private val x: A) {
 }
 
 object Value {
+
   implicit def isEqualable[A]: Equal[Value[A]] = Equal.equalA
+
+  implicit object IsShowable extends Show[Value[Any]] {
+    override def apply(value: Value[Any]) = value.show
+  }
 }

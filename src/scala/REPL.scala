@@ -31,26 +31,14 @@ class REPL extends Runnable {
         case Value(()) => /* no result */
         case value =>
           val name = expression match {
-            case Variable(symbol) => symbol.name
+            case Variable(symbol) => Show(symbol)
             case _ =>
               val name = s"res$i"
               global.define(Symbol(name)) = value
               i += 1
               name
           }
-          println(
-            s"$name = ${
-            (if (value.is[Boolean])
-               if (value.as[Boolean]) "#t" else "#f"
-             else if (value.is[Number])
-               value.as[Number].toString
-             else if (value.is[Symbol])
-               value.as[Symbol].name
-             else if (value.is[HList])
-               value.as[HList].mkString("(", " ", ")")
-             else
-               value.as[Any].toString)}"
-          )
+          println(s"$name = ${Show(value)}")
       }
       input = readLine(global) filter {!_.isEmpty}
     }

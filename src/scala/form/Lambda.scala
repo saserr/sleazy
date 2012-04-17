@@ -33,8 +33,7 @@ sealed trait Lambda[+A] extends Operation[A] {
 object Lambda {
 
   class BuiltIn[+A](override val formals: List[Symbol])(f: HList => Value[A]) extends Lambda[A] {
-    override protected lazy val show =
-      s"(lambda ${(formals map {_.name}).mkString("(", " ", ")")} <built-in>)"
+    override protected lazy val show = Show(this)(Lambda.IsShowable)
     override def invoke(arguments: HList) = f(arguments)
   }
 
@@ -57,10 +56,13 @@ object Lambda {
   case class UserDefined[+A](override val formals: List[Symbol])
                             (val body: Expression[A], definedIn: Environment) extends Lambda[A] {
 
-    override protected lazy val show =
-      s"(lambda ${(formals map {_.name}).mkString("(", " ", ")")} <user-defined>)"
+    override protected lazy val show = Show(this)(Lambda.IsShowable)
 
     override def invoke(arguments: HList) =
       body.evaluate(Environment(Map((formals zip arguments): _*), definedIn.pure[Option]))
+  }
+
+  implicit object IsShowable extends Show[Lambda[Any]] {
+    override def apply(lambda: Lambda[Any]) = s"<lambda ${Show(lambda.formals)}>"
   }
 }

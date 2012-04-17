@@ -20,7 +20,7 @@ sealed trait Expression[+A] {
   def evaluate(environment: Environment): Value[A]
 }
 
-case class Constant[+A](value: A) extends Expression[A] {
+case class Constant[+A : Show](value: A) extends Expression[A] {
   override def evaluate(environment: Environment) = Value(value)
 }
 

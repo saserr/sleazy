@@ -16,12 +16,17 @@
 
 package org.saserr.sleazy
 
-trait Operation[+A] extends ((List[Expression[Any]], Environment) => Value[A]) {
-  protected def show: String
-}
+trait Show[-A] extends (A => String)
 
-object Operation {
-  implicit object IsShowable extends Show[Operation[Any]] {
-    override def apply(operation: Operation[Any]) = operation.show
+object Show {
+
+  def apply[A](value: A)(implicit show: Show[A]): String = show(value)
+
+  implicit def seqIsShowable[A: Show]: Show[Seq[A]] = new Show[Seq[A]] {
+    override def apply(seq: Seq[A]) = seq map Show[A] mkString ("(", " ", ")")
+  }
+
+  implicit object SymbolIsShowable extends Show[Symbol] {
+    override def apply(value: Symbol) = value.name
   }
 }

@@ -15,13 +15,15 @@
  */
 
 package org.saserr.sleazy
+package library
 
-trait Operation[+A] extends ((List[Expression[Any]], Environment) => Value[A]) {
-  protected def show: String
-}
+trait Showables {
 
-object Operation {
-  implicit object IsShowable extends Show[Operation[Any]] {
-    override def apply(operation: Operation[Any]) = operation.show
+  implicit object BooleanIsShowable extends Show[Boolean] {
+    override def apply(value: Boolean) = if (value) "#t" else "#f"
+  }
+
+  implicit object UnitIsShowable extends Show[Unit] {
+    override def apply(value: Unit) = ""
   }
 }

@@ -21,7 +21,7 @@ trait Special[+A] extends Operation[A] {
 
   def syntax: List[Symbol]
 
-  override protected lazy val show = (syntax map {_.name}).mkString("(", " ", ")")
+  override protected lazy val show = Show(this)(Special.IsShowable)
 }
 
 object Special {
@@ -38,4 +38,8 @@ object Special {
   }
 
   def apply(syntax: String*): Helper = new Helper(syntax: _*)
+
+  implicit object IsShowable extends Show[Special[Any]] {
+    override def apply(special: Special[Any]) = Show(special.syntax)
+  }
 }

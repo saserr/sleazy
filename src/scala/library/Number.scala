@@ -31,7 +31,6 @@ class Number(val n: BigDecimal) extends AnyVal with Ordered[Number] {
   def apply(context: MathContext): Number = new Number(n(context))
 
   override def compare(that: Number) = this.n compare that.n
-  override def toString = n.underlying().toPlainString
 }
 
 object Number {
@@ -48,4 +47,8 @@ object Number {
     }
 
   implicit val isEqualable: Equal[Number] = Equal.equalA
+
+  implicit object IsShowable extends Show[Number] {
+    override def apply(value: Number) = value.n.underlying().toPlainString
+  }
 }
