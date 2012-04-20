@@ -15,18 +15,11 @@
  */
 
 package org.saserr.sleazy
+package library
 
-case class Literal[-A: Show : Type]() {
-
-  implicit val evaluate: Evaluate[A] = new Evaluate[A] {
-    override def apply(value: A, environment: Environment) = Value(value)
-  }
-
-  implicit val quote: Quote[A] = new Quote[A] {
-    override def apply(value: A) = Value(value)
-  }
-
-  implicit val unquote: Unquote[A] = new Unquote[A] {
-    override def apply(value: A) = Expression(value)
+trait Unquotables {
+  implicit object HListIsUnquotable extends Unquote[HList] {
+    override def apply(list: HList): Expression[List[Expression[Any]]] =
+      Expression[List[Expression[Any]]](list map Unquote[Value[Any]])
   }
 }

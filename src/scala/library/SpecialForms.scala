@@ -22,6 +22,17 @@ import form.{Lambda, Special}
 trait SpecialForms {
   this: Environment =>
 
+  define('quote) = Special("quote", "<datum>") {
+    (expressions, _) =>
+      val datum :: _ = expressions
+      Quote(datum)
+  }
+  define('unquote) = Special("unquote", "<datum>") {
+    (expressions, environment) =>
+      val datum :: _ = expressions
+      Evaluate.in(environment)(Unquote(Evaluate.in(environment)(datum)))
+  }
+
   define('if) = Special("if", "<test>", "<consequent>", "[<alternate>]") {
     (expressions, environment) =>
       val test :: consequent :: _ = expressions

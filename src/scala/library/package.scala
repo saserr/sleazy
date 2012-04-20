@@ -16,8 +16,10 @@
 
 package org.saserr.sleazy
 
-package object library extends Showables
+package object library extends Quotables
+                       with Showables
                        with Types
+                       with Unquotables
                        with Literals {
 
   type Boolean = scala.Boolean

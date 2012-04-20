@@ -43,10 +43,9 @@ object Lambda {
 
     class Helper(formals: String*) {
 
-      def apply[A](f: HList => Value[A]): Value[BuiltIn[A]] =
-        Value(new BuiltIn(formals.toList map {Symbol(_)})(f))
+      def apply[A](f: HList => Value[A]): BuiltIn[A] = new BuiltIn(formals.toList map {Symbol(_)})(f)
 
-      def apply[A: Manifest : Type, B](f: Seq[A] => Value[B]): Value[BuiltIn[B]] = apply {
+      def apply[A: Manifest : Type, B](f: Seq[A] => Value[B]): BuiltIn[B] = apply {
         arguments: HList =>
           f(arguments map {_.as[A]})
       }

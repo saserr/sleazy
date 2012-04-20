@@ -29,7 +29,7 @@ package object sleazy extends std.AllInstances
   type Seq[+A] = scala.collection.immutable.Seq[A]
   val Seq = scala.collection.immutable.Seq
 
-  type HList = Seq[Value[Any]]
+  type HList = List[Value[Any]]
   type Symbol = scala.Symbol
 
   def fail(message: String): Nothing = throw new IllegalArgumentException(message)

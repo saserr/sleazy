@@ -16,13 +16,15 @@
 
 package org.saserr.sleazy
 
+import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
-case class Expression[+A: Evaluate : Show](private val value: A) {
+case class Expression[+A: Evaluate : Quote : Show](private val value: A) {
 
   private object evaluate {
     def in(environment: Environment): Value[Any] = Evaluate.in(environment)(value)
   }
+  private lazy val quote: Value[Any] = Quote(value)
   private lazy val show: String = Show(value)
 
   def as[B: ClassTag](implicit t: Type[B]): B =
@@ -34,9 +36,15 @@ case class Expression[+A: Evaluate : Show](private val value: A) {
 
 object Expression {
 
+  implicit def fromLiteral[A: Literal](value: A): Expression[Any] = Unquote(value)
+
   implicit object IsEvaluable extends Evaluate[Expression[Any]] {
     override def apply(expression: Expression[Any], environment: Environment) =
       expression.evaluate.in(environment)
+  }
+
+  implicit object IsQuotable extends Quote[Expression[Any]] {
+    override def apply(expression: Expression[Any]) = expression.quote
   }
 
   implicit object IsShowable extends Show[Expression[Any]] {

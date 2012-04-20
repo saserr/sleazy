@@ -16,17 +16,18 @@
 
 package org.saserr.sleazy
 
-case class Literal[-A: Show : Type]() {
+import Show._
+import Unquote._
 
-  implicit val evaluate: Evaluate[A] = new Evaluate[A] {
-    override def apply(value: A, environment: Environment) = Value(value)
-  }
+trait Quote[-A] extends (A => Value[Any])
 
-  implicit val quote: Quote[A] = new Quote[A] {
-    override def apply(value: A) = Value(value)
-  }
+object Quote {
 
-  implicit val unquote: Unquote[A] = new Unquote[A] {
-    override def apply(value: A) = Expression(value)
+  def apply[A](value: A)(implicit quote: Quote[A]): Value[Any] = quote(value)
+
+  implicit def literalIsQuotable[A](implicit literal: Literal[A]): Quote[A] = literal.quote
+
+  implicit object SymbolIsQuotable extends Quote[Symbol] {
+    override def apply(name: Symbol) = Value(name)
   }
 }

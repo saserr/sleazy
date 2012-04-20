@@ -16,14 +16,16 @@
 
 package org.saserr.sleazy
 
+import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 import scalaz.Equal
 
-case class Value[+A: Show : Type](private val x: A) {
+case class Value[+A: Show : Type : Unquote](private val x: A) {
 
   private lazy val show: String = Show(x)
   private lazy val `type`: String = Type(x)
+  private lazy val unquote: Expression[Any] = Unquote(x)
 
   def as[B: ClassTag](implicit t: Type[B]): B =
     if (is[B]) x.asInstanceOf[B]
@@ -40,6 +42,8 @@ case class Value[+A: Show : Type](private val x: A) {
 
 object Value {
 
+  implicit def fromLiteral[A: Literal](value: A): Value[Any] = Quote(value)
+
   implicit object HasType extends Type[Value[Any]] {
     override val name = "Value"
     override def apply(value: Value[Any]) = value.`type`
@@ -49,5 +53,9 @@ object Value {
 
   implicit object IsShowable extends Show[Value[Any]] {
     override def apply(value: Value[Any]) = value.show
+  }
+
+  implicit object IsUnquotable extends Unquote[Value[Any]] {
+    override def apply(value: Value[Any]) = value.unquote
   }
 }
