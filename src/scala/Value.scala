@@ -27,9 +27,9 @@ case class Value[+A: Show : Type : Unquote](private val x: A) {
   private lazy val `type`: String = Type(x)
   private lazy val unquote: Expression[Any] = Unquote(x)
 
-  def as[B: ClassTag](implicit t: Type[B]): B =
-    if (is[B]) x.asInstanceOf[B]
-    else fail(s"$show is not a ${t.name}")
+  def as[B: ClassTag](implicit t: Type[B]): Validation[B] =
+    if (is[B]) x.asInstanceOf[B].pure[Validation]
+    else failure(EvaluationError(s"$show is not a ${t.name}"))
 
   def is[B](implicit ct: ClassTag[B]): Boolean = ct.runtimeClass.isInstance(x)
 

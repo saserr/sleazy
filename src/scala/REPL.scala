@@ -16,6 +16,8 @@
 
 package org.saserr.sleazy
 
+import scalaz.{Failure, Success}
+
 import library.parser
 
 class REPL extends Runnable {
@@ -26,19 +28,23 @@ class REPL extends Runnable {
     val global = new Environment(outer = predef.pure[Option])
     var input = readLine(global) filter {!_.isEmpty}
     while (input.isDefined) {
-      val expression = parse(input.get)
-      Evaluate.in(global)(expression) match {
-        case Value(()) => /* no result */
-        case value =>
-          val name =
-            if (expression.is[Symbol]) Show(expression.as[Symbol])
-            else {
-              val name = s"res$i"
-              global.define(Symbol(name)) = value
-              i += 1
-              name
-            }
-          println(s"$name: ${Type(value)} = ${Show(value)}")
+      parse(input.get).validation match {
+        case Failure(error) => println(s"syntax error: $error")
+        case Success(expression) =>
+          Evaluate.in(global)(expression).validation match {
+            case Failure(error) => println(s"error: $error")
+            case Success(Value(())) => /* no result */
+            case Success(value) =>
+              val name = expression.as[Symbol].validation match {
+                case Success(symbol) => Show(symbol)
+                case _ =>
+                  val result = s"res$i"
+                  global.define(Symbol(result)) = value
+                  i += 1
+                  result
+              }
+              println(s"$name: ${Type(value)} = ${Show(value)}")
+          }
       }
       input = readLine(global) filter {!_.isEmpty}
     }

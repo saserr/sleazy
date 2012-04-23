@@ -21,40 +21,46 @@ import java.math.MathContext.DECIMAL128
 
 import Number.{one, zero}
 import form.Lambda
+import util.Check
+import util.Check.Arguments
 
 trait Math {
   this: Environment =>
 
   define(Symbol("+")) = Lambda.BuiltIn("number*") {
     numbers: Seq[Number] =>
-      Value(numbers.foldLeft(zero) {_ + _})
+      Result(numbers.foldLeft(zero) {_ + _})
   }
   define(Symbol("-")) = Lambda.BuiltIn("number+") {
     numbers: Seq[Number] =>
-      Value(
-        if (numbers.length === 1) zero - numbers(0)
-        else numbers reduce {_ - _}
-      )
+      Check(Arguments(numbers).length >= 1) {
+        Result(
+          if (numbers.length === 1) zero - numbers(0)
+          else numbers reduce {_ - _}
+        )
+      }
   }
   define(Symbol("*")) = Lambda.BuiltIn("number*") {
     numbers: Seq[Number] =>
-      Value(numbers.foldLeft(one) {_ * _})
+      Result(numbers.foldLeft(one) {_ * _})
   }
   define(Symbol("/")) = Lambda.BuiltIn("number+") {
     numbers: Seq[Number] =>
-      if (numbers exists {_ === zero}) fail("division by zero")
-      else if (numbers.length === 1)
-        try Value(one / numbers(0))
-        catch {
-          case _: ArithmeticException =>
-            Value(one(DECIMAL128) / numbers(0))
-        }
-      else
-        try Value(numbers reduce {_ / _})
-        catch {
-          case _: ArithmeticException =>
-            val head :: tail = numbers
-            Value(tail.foldLeft(head(DECIMAL128)) {_ / _})
-        }
+      Check(Arguments(numbers).length >= 1) {
+        if (numbers exists {_ === zero}) fail("division by zero")
+        else if (numbers.length === 1)
+          try Result(one / numbers(0))
+          catch {
+            case _: ArithmeticException =>
+              Result(one(DECIMAL128) / numbers(0))
+          }
+        else
+          try Result(numbers reduce {_ / _})
+          catch {
+            case _: ArithmeticException =>
+              val head :: tail = numbers
+              Result(tail.foldLeft(head(DECIMAL128)) {_ / _})
+          }
+      }
   }
 }

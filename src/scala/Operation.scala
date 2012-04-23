@@ -16,7 +16,7 @@
 
 package org.saserr.sleazy
 
-trait Operation[+A] extends ((List[Expression[Any]], Environment) => Value[A]) {
+trait Operation[+A] extends ((List[Expression[Any]], Environment) => Result[A]) {
   protected def show: String
   protected def `type`: String
 }

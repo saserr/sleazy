@@ -18,34 +18,48 @@ package org.saserr.sleazy
 package library
 
 import form.Lambda
+import util.Check
+import util.Check.Arguments
 
 trait Standard {
   this: Environment =>
 
   define('list) = Lambda.BuiltIn("value*") {
     values: HList =>
-      Value(values)
+      Result(values)
   }
 
   define('cons) = Lambda.BuiltIn("value", "list") {
     values: HList =>
-      Value(values(0) +: values(1).as[HList])
+      Check(Arguments(values).length =:= 2) {
+        Result(values(1).as[HList] map {values(0) +: _})
+      }
   }
   define('car) = Lambda.BuiltIn("list") {
     values: HList =>
-      values.head.as[HList].head
+      Check(Arguments(values).length =:= 1) {
+        values.head.as[HList] flatMap {
+          list => list.headOption or s"${Type(list)} is empty"
+        }
+      }
   }
   define('cdr) = Lambda.BuiltIn("list") {
     values: HList =>
-      Value(values.head.as[HList] drop 1)
+      Check(Arguments(values).length =:= 1) {
+        Result(values.head.as[HList] map {_ drop 1})
+      }
   }
 
   define(Symbol("null?")) = Lambda.BuiltIn("list") {
     values: HList =>
-      Value(values.head.as[HList].isEmpty)
+      Check(Arguments(values).length =:= 1) {
+        Result(values.head.as[HList] map {_.isEmpty})
+      }
   }
   define('length) = Lambda.BuiltIn("list") {
     values: HList =>
-      Value(Number(values.head.as[HList].length))
+      Check(Arguments(values).length =:= 1) {
+        Result(values.head.as[HList] map {list => Number(list.length)})
+      }
   }
 }

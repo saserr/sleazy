@@ -15,27 +15,19 @@
  */
 
 package org.saserr.sleazy
-package library
 
-import form.Lambda
-import util.Check
-import util.Check.Arguments
+sealed trait Error
 
-trait Logic {
-  this: Environment =>
+object Error {
+  implicit object IsShowable extends Show[Error] {
+    override def apply(error: Error) = error.toString
+  }
+}
 
-  define('not) = Lambda.BuiltIn("boolean") {
-    values: HList =>
-      Check(Arguments(values).length =:= 1) {
-        Result(values.head === `#f`)
-      }
-  }
-  define('and) = Lambda.BuiltIn("boolean*") {
-    values: HList =>
-      Result(values forall {_ /== `#f`})
-  }
-  define('or) = Lambda.BuiltIn("boolean*") {
-    values: HList =>
-      Result(values exists {_ /== `#f`})
-  }
+case class SyntaxError(message: String) extends Error {
+  override lazy val toString: String = s"syntax error: $message"
+}
+
+case class EvaluationError(message: String) extends Error {
+  override lazy val toString: String = s"evaluation error: $message"
 }

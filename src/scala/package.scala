@@ -17,6 +17,7 @@
 package org.saserr
 
 import scalaz.{std, syntax}
+import scalaz.{\/, Equal}
 
 package object sleazy extends std.AllInstances
                       with    syntax.ToDataOps
@@ -32,5 +33,13 @@ package object sleazy extends std.AllInstances
   type HList = List[Value[Any]]
   type Symbol = scala.Symbol
 
-  def fail(message: String): Nothing = throw new IllegalArgumentException(message)
+  type Validation[+A] = Error \/ A
+  type Result[+A] = Validation[Value[A]]
+
+  def fail(message: String): Result[Nothing] = failure(EvaluationError(message))
+  def failure(error: Error): Validation[Nothing] = error.left
+
+  implicit class OptionOps[A](o: Option[A]) {
+    def or(error: String): Validation[A] = o \/> EvaluationError(error)
+  }
 }

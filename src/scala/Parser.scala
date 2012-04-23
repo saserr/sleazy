@@ -17,5 +17,5 @@
 package org.saserr.sleazy
 
 trait Parser {
-  def parse(input: String): Expression[Any]
+  def parse(input: String): Validation[Expression[Any]]
 }

@@ -18,50 +18,64 @@ package org.saserr.sleazy
 package library
 
 import form.Lambda
+import util.Check
+import util.Check.Arguments
 
 trait Comparisons {
   this: Environment =>
 
   define(Symbol("equal?")) = Lambda.BuiltIn("x", "y") {
     values: HList =>
-      Value(values(0) === values(1))
+      Check(Arguments(values).length =:= 2) {
+        Result(values(0) === values(1))
+      }
   }
   define(Symbol("eq?")) = Lambda.BuiltIn("x", "y") {
     values: HList =>
-      Value(values(0) sameAs values(1))
+      Check(Arguments(values).length =:= 2) {
+        Result(values(0) sameAs values(1))
+      }
   }
 
   define(Symbol("boolean?")) = Lambda.BuiltIn("x") {
     values: HList =>
-      Value(values.head.is[Boolean])
+      Check(Arguments(values).length =:= 1) {
+        Result(values.head.is[Boolean])
+      }
   }
   define(Symbol("number?")) = Lambda.BuiltIn("x") {
     values: HList =>
-      Value(values.head.is[Number])
+      Check(Arguments(values).length =:= 1) {
+        Result(values.head.is[Number])
+      }
   }
   define(Symbol("symbol?")) = Lambda.BuiltIn("x") {
     values: HList =>
-      Value(values.head.is[Symbol])
+      Check(Arguments(values).length =:= 1) {
+        Result(values.head.is[Symbol])
+      }
   }
   define(Symbol("list?")) = Lambda.BuiltIn("x") {
     values: HList =>
-      Value(values.head.is[HList])
+      Check(Arguments(values).length =:= 1) {
+        Result(values.head.is[HList])
+      }
   }
 
   define(Symbol("<")) = Lambda.BuiltIn("number*") {
     numbers: Seq[Number] =>
-      Value(numbers zip (numbers drop 1) forall {case (a, b) => a < b})
+      Result(numbers zip (numbers drop 1) forall {case (a, b) => a < b})
   }
   define(Symbol("<=")) = Lambda.BuiltIn("number*") {
     numbers: Seq[Number] =>
-      Value(numbers zip (numbers drop 1) forall {case (a, b) => a <= b})
+      Result(numbers zip (numbers drop 1) forall {case (a, b) => a <= b})
   }
   define(Symbol(">")) = Lambda.BuiltIn("number*") {
     numbers: Seq[Number] =>
-      Value(numbers zip (numbers drop 1) forall {case (a, b) => a > b})
+      Result(numbers zip (numbers drop 1) forall {case (a, b) => a > b})
   }
   define(Symbol(">=")) = Lambda.BuiltIn("number*") {
     numbers: Seq[Number] =>
-      Value(numbers zip (numbers drop 1) forall {case (a, b) => a >= b})
+      Result(numbers zip (numbers drop 1) forall {case (a, b) => a >= b})
   }
 }

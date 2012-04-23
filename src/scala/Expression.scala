@@ -22,14 +22,14 @@ import scala.reflect.ClassTag
 case class Expression[+A: Evaluate : Quote : Show](private val value: A) {
 
   private object evaluate {
-    def in(environment: Environment): Value[Any] = Evaluate.in(environment)(value)
+    def in(environment: Environment): Result[Any] = Evaluate.in(environment)(value)
   }
   private lazy val quote: Value[Any] = Quote(value)
   private lazy val show: String = Show(value)
 
-  def as[B: ClassTag](implicit t: Type[B]): B =
-    if (is[B]) value.asInstanceOf[B]
-    else fail(s"$show is not a ${t.name}")
+  def as[B: ClassTag](implicit t: Type[B]): Validation[B] =
+    if (is[B]) value.asInstanceOf[B].pure[Validation]
+    else failure(EvaluationError(s"$show is not a ${t.name}"))
 
   def is[B](implicit ct: ClassTag[B]): Boolean = ct.runtimeClass.isInstance(value)
 }

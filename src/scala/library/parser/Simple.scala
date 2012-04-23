@@ -20,30 +20,31 @@ package parser
 
 import scala.annotation.tailrec
 
+import scalaz.{Failure, Success}
 import scalaz.Lens.{firstLens => first}
 
 trait Simple extends Parser {
 
-  override def parse(input: String) = first.get(parse(tokenize(input)))
+  override def parse(input: String) = parse(tokenize(input)) map first.get
 
   private def tokenize(input: String): List[String] =
     input.replace("(", " ( ").replace(")", " ) ").trim.split("\\s+").toList
 
-  private def parse(tokens: List[String]): (Expression[Any], List[String]) =
+  private def parse(tokens: List[String]): Validation[(Expression[Any], List[String])] =
     tokens match {
       case "(" :: rest =>
-        @tailrec def iterate(expressions: List[Expression[Any]], tokens: List[String]): (Expression[Any], List[String]) =
+        @tailrec def iterate(expressions: List[Expression[Any]], tokens: List[String]): Validation[(Expression[Any], List[String])] =
           if (tokens.isEmpty || (tokens.head === ")"))
-            (Expression(expressions), tokens drop 1)
-          else {
-            val (expression, remaining) = parse(tokens)
-            iterate(expressions :+ expression, remaining)
+            (Expression(expressions), tokens drop 1).pure[Validation]
+          else parse(tokens).validation match {
+            case Success((expression, remaining)) => iterate(expressions :+ expression, remaining)
+            case Failure(error) => failure(error)
           }
 
         iterate(List.empty, rest)
-      case ")" :: _ => fail("Unexpected )")
-      case token :: rest => (datum(token), rest)
-      case Nil => fail("Unexpected EOF while reading")
+      case ")" :: _ => failure(SyntaxError("unexpected )"))
+      case token :: rest => (datum(token), rest).pure[Validation]
+      case Nil => failure(SyntaxError("unexpected EOF while reading"))
     }
 
   private def datum(token: String): Expression[Any] = {

@@ -15,27 +15,8 @@
  */
 
 package org.saserr.sleazy
-package library
 
-import form.Lambda
-import util.Check
-import util.Check.Arguments
-
-trait Logic {
-  this: Environment =>
-
-  define('not) = Lambda.BuiltIn("boolean") {
-    values: HList =>
-      Check(Arguments(values).length =:= 1) {
-        Result(values.head === `#f`)
-      }
-  }
-  define('and) = Lambda.BuiltIn("boolean*") {
-    values: HList =>
-      Result(values forall {_ /== `#f`})
-  }
-  define('or) = Lambda.BuiltIn("boolean*") {
-    values: HList =>
-      Result(values exists {_ /== `#f`})
-  }
+object Result {
+  def apply[A: Show : Type : Unquote](v: Validation[A]): Result[A] = v map Value[A]
+  def apply[A: Show : Type : Unquote](a: A): Result[A] = apply(a.pure[Validation])
 }

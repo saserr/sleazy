@@ -16,11 +16,11 @@
 
 package org.saserr.sleazy
 
-trait Evaluate[-A] extends ((A, Environment) => Value[Any])
+trait Evaluate[-A] extends ((A, Environment) => Result[Any])
 
 object Evaluate {
 
-  def in[A](environment: Environment)(value: A)(implicit evaluate: Evaluate[A]): Value[Any] =
+  def in[A](environment: Environment)(value: A)(implicit evaluate: Evaluate[A]): Result[Any] =
     evaluate(value, environment)
 
   implicit def literalIsEvaluable[A](implicit literal: Literal[A]): Evaluate[A] =
@@ -29,14 +29,16 @@ object Evaluate {
   implicit object ExpressionsAreEvaluable extends Evaluate[List[Expression[Any]]] {
     override def apply(expressions: List[Expression[Any]], environment: Environment) = expressions match {
       case operation :: operands =>
-        val form = Evaluate.in(environment)(operation).as[Operation[Any]]
-        form(operands, environment)
+        for {
+          result <- Evaluate.in(environment)(operation)
+          value <- result.as[Operation[Any]] flatMap {_(operands, environment)}
+        } yield value
       case Nil => fail("nothing to invoke")
     }
   }
 
   implicit object SymbolIsEvaluable extends Evaluate[Symbol] {
     override def apply(name: Symbol, environment: Environment) =
-      environment.find(name).get
+      environment.find(name) or s"${Show(name)} is not defined"
   }
 }
