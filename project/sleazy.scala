@@ -69,6 +69,7 @@ object Dependency {
   object Scalaz {
     val version = "7.0.2"
     val core = "org.scalaz" %% "scalaz-core" % version
+    val effect = "org.scalaz" %% "scalaz-effect" % version
   }
 
   object JLine {
@@ -89,6 +90,6 @@ object sleazy extends Build {
                Layout.settings ++
                Build.settings ++
                Shell.settings ++
-               Seq(libraryDependencies ++= Seq(JLine.core, Scalaz.core))
+               Seq(libraryDependencies ++= Seq(JLine.core, Scalaz.core, Scalaz.effect))
   )
 }

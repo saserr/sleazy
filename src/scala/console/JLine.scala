@@ -17,7 +17,7 @@
 package org.saserr.sleazy
 package console
 
-import java.util.{List => JList}
+import java.util.{Collection, List => JList}
 
 import scala.collection.JavaConversions._
 import scala.collection.immutable.Set
@@ -38,12 +38,12 @@ trait JLine extends Console with Configuration {
   Terminal disableEcho()
   reader setBellEnabled true
 
-  override def println(s: String) {
+  override def println(s: String): IO[Unit] = IO {
     reader.printString(s)
-    reader.printNewline()
+    reader.printNewline().pure[Option]
   }
 
-  override def readLine(environment: Environment): Option[String] = {
+  override def readLine(environment: Environment): IO[String] = IO {
     def read(): Option[String] = Option(reader.readLine(config.prompt))
 
     val completor = new AutoCompletion(environment)

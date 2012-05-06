@@ -16,7 +16,16 @@
 
 package org.saserr.sleazy
 
+import scalaz.OptionT
+
 trait Console {
-  def println(s: String)
-  def readLine(environment: Environment): Option[String]
+
+  type IO[+A] = OptionT[scalaz.effect.IO, A]
+
+  object IO {
+    def apply[A](a: => Option[A]): IO[A] = OptionT(scalaz.effect.IO(a))
+  }
+
+  def println(s: String): IO[Unit]
+  def readLine(environment: Environment): IO[String]
 }
