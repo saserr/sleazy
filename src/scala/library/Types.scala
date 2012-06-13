@@ -27,6 +27,10 @@ trait Types {
     override val name = "List"
   }
 
+  implicit object StringHasType extends Type[String] {
+    override val name = "String"
+  }
+
   implicit object UnitHasType extends Type[Unit] {
     override val name = "Void"
   }

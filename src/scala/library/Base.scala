@@ -27,5 +27,7 @@ trait Base extends Library {
     define(Symbol("")) = Value(())
     define(Symbol("#f")) = `#f`
     define(Symbol("#t")) = `#t`
+
+    for {name <- Char.names; char <- Char withName name} define(Symbol(s"#\\$name")) = char
   }
 }

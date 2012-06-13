@@ -49,6 +49,18 @@ trait Comparisons {
         Result(values.head.is[Number])
       }
   }
+  define(Symbol("char?")) = Lambda.BuiltIn("x") {
+    values: HList =>
+      Check(Arguments(values).length =:= 1) {
+        Result(values.head.is[Char])
+      }
+  }
+  define(Symbol("string?")) = Lambda.BuiltIn("x") {
+    values: HList =>
+      Check(Arguments(values).length =:= 1) {
+        Result(values.head.is[String])
+      }
+  }
   define(Symbol("symbol?")) = Lambda.BuiltIn("x") {
     values: HList =>
       Check(Arguments(values).length =:= 1) {

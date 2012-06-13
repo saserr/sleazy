@@ -32,6 +32,19 @@ object Parse {
     }
   }
 
+  implicit object CharIsParsable extends Parse[Char] {
+    override def apply(str: String) =
+      if (str.startsWith("#\\x")) {
+        val codePoint: Int = Integer.parseInt(str.substring(3), 16)
+        if (Character.charCount(codePoint) === 1)
+          new Char(Character.toChars(codePoint)(0)).pure[Option]
+        else None
+      } else if (str.startsWith("#\\")) {
+        if (str.length === 3) new Char(str.charAt(2)).pure[Option]
+        else Char.withName(str.substring(2))
+      } else None
+  }
+
   implicit object NumberIsParsable extends Parse[Number] {
     override def apply(str: String) = Number(str)
   }

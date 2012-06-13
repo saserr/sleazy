@@ -19,5 +19,6 @@ package library
 
 trait Literals {
   implicit object BooleanIsLiteral extends Literal[Boolean]
+  implicit object StringIsLiteral extends Literal[String]
   implicit object UnitIsLiteral extends Literal[Unit]
 }

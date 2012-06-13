@@ -51,7 +51,7 @@ trait Simple extends Parser {
     def literal[A: Literal : Parse : Show]: Option[Expression[A]] =
       Parse[A](token) map Expression[A]
 
-    val result: Option[Expression[Any]] = literal[Boolean] orElse literal[Number]
+    val result: Option[Expression[Any]] = literal[Boolean] orElse literal[Char] orElse literal[Number]
     result | Expression(Symbol(token))
   }
 }

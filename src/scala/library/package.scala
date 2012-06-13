@@ -23,6 +23,7 @@ package object library extends Quotables
                        with Literals {
 
   type Boolean = scala.Boolean
+  type String = java.lang.String
   type Unit = scala.Unit
 
   val `#f`: Value[Boolean] = Value(false)

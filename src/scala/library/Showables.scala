@@ -23,6 +23,10 @@ trait Showables {
     override def apply(value: Boolean) = if (value) "#t" else "#f"
   }
 
+  implicit object StringIsShowable extends Show[String] {
+    override def apply(value: String) = "\"" + value + "\""
+  }
+
   implicit object UnitIsShowable extends Show[Unit] {
     override def apply(value: Unit) = ""
   }
