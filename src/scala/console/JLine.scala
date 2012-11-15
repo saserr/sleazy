@@ -82,7 +82,7 @@ trait JLine extends Console with Configuration {
 
     private def variables(prefix: String): Set[String] =
       for {
-        variable <- environment.names()
+        variable <- environment.names
         name = variable.name
         if name startsWith prefix
         value <- environment.find(variable)
@@ -91,7 +91,7 @@ trait JLine extends Console with Configuration {
 
     private def operations(prefix: String): Set[String] =
       for {
-        operation <- environment.names()
+        operation <- environment.names
         name = operation.name
         if name startsWith prefix
         value <- environment.find(operation)

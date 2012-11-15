@@ -28,13 +28,10 @@ trait Special[+A] extends Operation[A] {
 object Special {
 
   class Helper(syntax: String*) {
-    def apply[A](f: (List[Expression[Any]], Environment) => Result[A]): Special[A] =
+    def apply[A](f: List[Expression[Any]] => Result[A]): Special[A] =
       new Special[A] {
-
         override val syntax = Helper.this.syntax.toList map {Symbol(_)}
-
-        override def apply(operands: List[Expression[Any]], executedIn: Environment) =
-          f(operands, executedIn)
+        override def apply(operands: List[Expression[Any]], definedIn: Environment) = f(operands)
       }
   }
 

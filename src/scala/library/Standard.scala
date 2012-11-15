@@ -22,7 +22,7 @@ import util.Check
 import util.Check.Arguments
 
 trait Standard {
-  this: Environment =>
+  this: Environment.Builder =>
 
   define('list) = Lambda.BuiltIn("value*") {
     values: HList =>
@@ -38,9 +38,9 @@ trait Standard {
   define('car) = Lambda.BuiltIn("list") {
     values: HList =>
       Check(Arguments(values).length =:= 1) {
-        values.head.as[HList] flatMap {
+        Result(values.head.as[HList] flatMap {
           list => list.headOption or s"${Type(list)} is empty"
-        }
+        })
       }
   }
   define('cdr) = Lambda.BuiltIn("list") {

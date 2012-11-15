@@ -19,7 +19,7 @@ package org.saserr.sleazy
 case class Literal[-A: Show : Type]() {
 
   implicit val evaluate: Evaluate[A] = new Evaluate[A] {
-    override def apply(value: A, environment: Environment) = Result(value)
+    override def apply(value: A) = Result(value)
   }
 
   implicit val quote: Quote[A] = new Quote[A] {

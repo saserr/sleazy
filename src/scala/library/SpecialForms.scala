@@ -22,61 +22,62 @@ import util.Check
 import util.Check.Arguments
 
 trait SpecialForms {
-  this: Environment =>
+  this: Environment.Builder =>
 
   define('quote) = Special("quote", "<datum>") {
-    (expressions, _) =>
+    expressions =>
       val datum :: _ = expressions
       Check(Arguments(expressions).length =:= 1) {
         Result(Quote(datum))
       }
   }
   define('unquote) = Special("unquote", "<datum>") {
-    (expressions, environment) =>
+    expressions =>
       val datum :: _ = expressions
       Check(Arguments(expressions).length =:= 1) {
-        Evaluate.in(environment)(datum) flatMap {value => Evaluate.in(environment)(Unquote(value))}
+        Evaluate(datum) flatMap {value => Evaluate(Unquote(value))}
       }
   }
 
   define('if) = Special("if", "<test>", "<consequent>", "[<alternate>]") {
-    (expressions, environment) =>
+    expressions =>
       Check(Arguments(expressions).length between (2, 3)) {
         val test :: consequent :: _ = expressions
-        Evaluate.in(environment)(test) flatMap {
+        Evaluate(test) flatMap {
           value =>
-            if (value === `#f`)
-              ((expressions drop 2).headOption map Evaluate.in(environment)) | Result(())
-            else Evaluate.in(environment)(consequent)
+            if (value === `#f`) (expressions.lift(2) map Evaluate[Expression[Any]]) | Result(())
+            else Evaluate(consequent)
         }
       }
   }
 
   define(Symbol("set!")) = Special("set!", "<variable>", "<expression>") {
-    (expressions, environment) =>
+    expressions =>
       Check(Arguments(expressions).length =:= 2) {
         val variable :: expression :: _ = expressions
         for {
-          name <- variable.as[Symbol]
-          value <- Evaluate.in(environment)(expression)
-          _ = (environment.set(name) = value)
+          current <- State.environment.get
+          value <- Evaluate(expression)
+          next = variable.as[Symbol] map {name => current.set(name) = value}
+          _ <- State.environment.put(next | current)
         } yield Value(())
       }
   }
   define('define) = Special("define", "<variable>", "<expression>") {
-    (expressions, environment) =>
+    expressions =>
       Check(Arguments(expressions).length =:= 2) {
         val variable :: expression :: _ = expressions
         for {
-          name <- variable.as[Symbol]
-          value <- Evaluate.in(environment)(expression)
-          _ = (environment.define(name) = value)
+          current <- State.environment.get
+          value <- Evaluate(expression)
+          next = variable.as[Symbol] map {name => current.define(name) = value}
+          _ <- State.environment.put(next | current)
         } yield Value(())
       }
   }
 
   define('lambda) = Special("lambda", "<formals>", "<body>") {
-    (expressions, environment) =>
+    expressions =>
       Check(Arguments(expressions).length =:= 2) {
         val formals :: body :: _ = expressions
         implicit object ExpressionsType extends Type[List[Expression[Any]]] {
@@ -86,16 +87,16 @@ trait SpecialForms {
           for {
             values <- formals.as[List[Expression[Any]]]
             parameters <- (values map {_.as[Symbol]}).sequence
-          } yield Lambda.UserDefined(parameters)(body, environment)
+          } yield Lambda.UserDefined(parameters)(body)
         }
       }
   }
 
   define('begin) = Special("begin", "<expression*>") {
-    (expressions, environment) =>
+    expressions =>
       expressions.foldLeft[Result[Any]](Result(())) {
         (previous, expression) =>
-          previous flatMap {_ => Evaluate.in(environment)(expression)}
+          previous flatMap {_ => Evaluate(expression)}
       }
   }
 }

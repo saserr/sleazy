@@ -17,27 +17,25 @@
 package org.saserr.sleazy
 package form
 
-import scala.collection.mutable.Map
-
 import util.Check
 import util.Check.Arguments
 
 sealed trait Lambda[+A] extends Operation[A] {
 
   def formals: List[Symbol]
-  def invoke(arguments: HList): Result[A]
+  def invoke(definedIn: Environment)(arguments: HList): Result[A]
 
   override protected val `type` = "Lambda"
 
-  override def apply(operands: List[Expression[Any]], executedIn: Environment) =
-    (operands map Evaluate.in(executedIn)).sequence[Validation, Value[Any]] flatMap invoke
+  override def apply(operands: List[Expression[Any]], definedIn: Environment) =
+    (operands map Evaluate[Expression[Any]]).sequence[State, Value[Any]] flatMap invoke(definedIn)
 }
 
 object Lambda {
 
   class BuiltIn[+A](override val formals: List[Symbol])(f: HList => Result[A]) extends Lambda[A] {
     override protected lazy val show = Show(this)(BuiltIn.IsShowable)
-    override def invoke(arguments: HList) = f(arguments)
+    override def invoke(definedIn: Environment)(arguments: HList) = f(arguments)
   }
 
   object BuiltIn {
@@ -48,7 +46,7 @@ object Lambda {
 
       def apply[A: Manifest : Type, B](f: Seq[A] => Result[B]): BuiltIn[B] = apply {
         arguments: HList =>
-          (arguments map {_.as[A]}).sequence flatMap f
+          ((arguments map {_.as[A]}).sequence map f).flatten[Value[B]]
       }
     }
 
@@ -59,14 +57,18 @@ object Lambda {
     }
   }
 
-  case class UserDefined(override val formals: List[Symbol])
-                        (val body: Expression[Any], definedIn: Environment) extends Lambda[Any] {
+  case class UserDefined(override val formals: List[Symbol])(val body: Expression[Any]) extends Lambda[Any] {
 
     override protected lazy val show = Show(this)(UserDefined.IsShowable)
 
-    override def invoke(arguments: HList) =
+    override def invoke(definedIn: Environment)(arguments: HList) =
       Check(Arguments(arguments).length =:= formals.length) {
-        Evaluate.in(Environment(Map((formals zip arguments): _*), definedIn.pure[Option]))(body)
+        for {
+          current <- State.environment.get
+          _ <- State.environment.put(Environment((formals zip arguments).toMap, definedIn.pure[Option]))
+          value <- Evaluate(body)
+          _ <- State.environment.put(current)
+        } yield value
       }
   }
 

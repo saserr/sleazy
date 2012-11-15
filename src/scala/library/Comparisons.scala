@@ -22,7 +22,7 @@ import util.Check
 import util.Check.Arguments
 
 trait Comparisons {
-  this: Environment =>
+  this: Environment.Builder =>
 
   define(Symbol("equal?")) = Lambda.BuiltIn("x", "y") {
     values: HList =>

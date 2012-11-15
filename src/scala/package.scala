@@ -17,7 +17,7 @@
 package org.saserr
 
 import scalaz.{std, syntax}
-import scalaz.{\/, Equal}
+import scalaz.{\/, Equal, StateT}
 
 package object sleazy extends std.AllInstances
                       with    syntax.ToDataOps
@@ -34,12 +34,21 @@ package object sleazy extends std.AllInstances
   type Symbol = scala.Symbol
 
   type Validation[+A] = Error \/ A
-  type Result[+A] = Validation[Value[A]]
+  type State[+A] = StateT[Validation, Environment, A]
+  type Result[+A] = State[Value[A]]
 
-  def fail(message: String): Result[Nothing] = failure(EvaluationError(message))
+  def fail(message: String): Result[Nothing] = State(failure(EvaluationError(message)))
   def failure(error: Error): Validation[Nothing] = error.left
 
   implicit class OptionOps[A](o: Option[A]) {
     def or(error: String): Validation[A] = o \/> EvaluationError(error)
+  }
+
+  implicit class ValidationOps[A](v: Validation[A]) {
+
+    import scalaz.Leibniz.===
+
+    final def flatten[B](implicit ev: Validation[A] === Validation[State[B]]): State[B] =
+      ev(v) valueOr {e => State(failure(e))}
   }
 }

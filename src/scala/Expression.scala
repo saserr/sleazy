@@ -21,9 +21,7 @@ import scala.reflect.ClassTag
 
 case class Expression[+A: Evaluate : Quote : Show](private val value: A) {
 
-  private object evaluate {
-    def in(environment: Environment): Result[Any] = Evaluate.in(environment)(value)
-  }
+  private lazy val evaluate: Result[Any] = Evaluate(value)
   private lazy val quote: Value[Any] = Quote(value)
   private lazy val show: String = Show(value)
 
@@ -39,8 +37,7 @@ object Expression {
   implicit def fromLiteral[A: Literal](value: A): Expression[Any] = Unquote(value)
 
   implicit object IsEvaluable extends Evaluate[Expression[Any]] {
-    override def apply(expression: Expression[Any], environment: Environment) =
-      expression.evaluate.in(environment)
+    override def apply(expression: Expression[Any]) = expression.evaluate
   }
 
   implicit object IsQuotable extends Quote[Expression[Any]] {

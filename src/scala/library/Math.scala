@@ -25,7 +25,7 @@ import util.Check
 import util.Check.Arguments
 
 trait Math {
-  this: Environment =>
+  this: Environment.Builder =>
 
   define(Symbol("+")) = Lambda.BuiltIn("number*") {
     numbers: Seq[Number] =>

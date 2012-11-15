@@ -16,7 +16,10 @@
 
 package org.saserr.sleazy
 
-object Result {
-  def apply[A: Show : Type : Unquote](v: Validation[A]): Result[A] = State(v map Value[A])
-  def apply[A: Show : Type : Unquote](a: A): Result[A] = apply(a.pure[Validation])
+import scalaz.StateT
+import scalaz.StateT.{stateTMonadState => monadState}
+
+object State {
+  def apply[A](v: Validation[A]): State[A] = StateT[Validation, Environment, A](e => v map {e.->})
+  val environment = monadState[Environment, Validation]
 }

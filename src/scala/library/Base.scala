@@ -18,11 +18,14 @@ package org.saserr.sleazy
 package library
 
 trait Base extends Library {
-  override def predef = new Environment with Comparisons
-                                        with Logic
-                                        with Math
-                                        with SpecialForms
-                                        with Standard {
+
+  override def predef = builder.result()
+
+  private val builder = new Environment.Builder with Comparisons
+                                                with Logic
+                                                with Math
+                                                with SpecialForms
+                                                with Standard {
 
     define(Symbol("")) = Value(())
     define(Symbol("#f")) = `#f`

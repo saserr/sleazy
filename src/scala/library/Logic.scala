@@ -22,7 +22,7 @@ import util.Check
 import util.Check.Arguments
 
 trait Logic {
-  this: Environment =>
+  this: Environment.Builder =>
 
   define('not) = Lambda.BuiltIn("boolean") {
     values: HList =>

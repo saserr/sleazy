@@ -16,26 +16,42 @@
 
 package org.saserr.sleazy
 
-import scala.collection.immutable.Set
-import scala.collection.mutable.Map
+import scala.collection.immutable.{Map, Set}
 
 case class Environment(variables: Map[Symbol, Value[Any]] = Map.empty, outer: Option[Environment] = None) {
 
-  def names(): Set[Symbol] = variables.keys.toSet ++ ((outer map {_.names()}) | Set.empty)
+  lazy val names: Set[Symbol] = variables.keys.toSet ++ ((outer map {_.names}) | Set.empty)
 
   def find(name: Symbol): Option[Value[Any]] =
     variables.get(name) orElse {outer flatMap {_ find name}}
 
+  def whichHas(name: Symbol): Option[Environment] =
+    if (variables contains name) this.pure[Option]
+    else outer flatMap {_ whichHas name}
+
   object set {
-    def update(name: Symbol, value: Value[Any]) {
-      if (variables contains name) variables(name) = value
-      else outer map {_.set(name) = value}
-    }
+    def update(name: Symbol, value: Value[Any]): Environment =
+      if (variables contains name) copy(variables = variables updated (name, value))
+      else copy(outer = outer map {_.set(name) = value})
   }
 
   object define {
-    def update(name: Symbol, value: Value[Any]) {
-      variables(name) = value
+    def update(name: Symbol, value: Value[Any]): Environment =
+      copy(variables = variables updated (name, value))
+  }
+}
+
+object Environment {
+  class Builder {
+
+    private val variables = Map.newBuilder[Symbol, Value[Any]]
+
+    def result(): Environment = Environment(variables.result())
+
+    object define {
+      def update(name: Symbol, value: Value[Any]) {
+        variables += (name -> value)
+      }
     }
   }
 }

@@ -16,29 +16,40 @@
 
 package org.saserr.sleazy
 
-trait Evaluate[-A] extends ((A, Environment) => Result[Any])
+trait Evaluate[-A] extends (A => Result[Any])
 
 object Evaluate {
 
-  def in[A](environment: Environment)(value: A)(implicit evaluate: Evaluate[A]): Result[Any] =
-    evaluate(value, environment)
+  def apply[A](value: A)(implicit evaluate: Evaluate[A]): Result[Any] = evaluate(value)
+
+  def in[A](environment: Environment)(value: A)
+           (implicit evaluate: Evaluate[A]): Validation[(Environment, Value[Any])] =
+    evaluate(value)(environment)
 
   implicit def literalIsEvaluable[A](implicit literal: Literal[A]): Evaluate[A] =
     literal.evaluate
 
   implicit object ExpressionsAreEvaluable extends Evaluate[List[Expression[Any]]] {
-    override def apply(expressions: List[Expression[Any]], environment: Environment) = expressions match {
+    override def apply(expressions: List[Expression[Any]]) = expressions match {
       case operation :: operands =>
+        def whichHas(environment: Environment)(name: Symbol): Validation[Environment] =
+          environment.whichHas(name) or s"could not find the environment where ${Show(name)} is defined"
+
         for {
-          result <- Evaluate.in(environment)(operation)
-          value <- result.as[Operation[Any]] flatMap {_(operands, environment)}
+          result <- Evaluate(operation)
+          current <- State.environment.get
+          definedIn = (operation.as[Symbol] map whichHas(current)) | current.right
+          value <- (for {f <- result.as[Operation[Any]]; e <- definedIn} yield f(operands, e)).flatten[Value[Any]]
         } yield value
       case Nil => fail("nothing to invoke")
     }
   }
 
   implicit object SymbolIsEvaluable extends Evaluate[Symbol] {
-    override def apply(name: Symbol, environment: Environment) =
-      environment.find(name) or s"${Show(name)} is not defined"
+    override def apply(name: Symbol) =
+      State.environment.get flatMap {
+        current =>
+          State(current.find(name) or s"${Show(name)} is not defined")
+      }
   }
 }
