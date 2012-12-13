@@ -16,21 +16,8 @@
 
 package org.saserr.sleazy
 
-trait Operation[+A] extends ((List[Expression[Any]], Environment) => Value[A]) {
-  protected def show: String
-  protected def `type`: String
-}
-
-object Operation {
-
-  implicit object HasType extends Type[Operation[Any]] {
-    override val name = "Operation"
-    override def apply(operation: Operation[Any]) = operation.`type`
+case class Literal[-A: Show : Type]() {
+  implicit val evaluate: Evaluate[A] = new Evaluate[A] {
+    override def apply(value: A, environment: Environment) = Value(value)
   }
-
-  implicit object IsShowable extends Show[Operation[Any]] {
-    override def apply(operation: Operation[Any]) = operation.show
-  }
-
-  implicit object IsLiteral extends Literal[Operation[Any]]
 }

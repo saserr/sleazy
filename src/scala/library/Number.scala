@@ -55,4 +55,6 @@ object Number {
   implicit object IsShowable extends Show[Number] {
     override def apply(value: Number) = value.n.underlying().toPlainString
   }
+
+  implicit object IsLiteral extends Literal[Number]
 }

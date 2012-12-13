@@ -25,10 +25,6 @@ object Type {
 
   def apply[A](value: A)(implicit `type`: Type[A]): String = `type`(value)
 
-  implicit object HListHasType extends Type[HList] {
-    override val name = "List"
-  }
-
   implicit object SymbolHasType extends Type[Symbol] {
     override val name = "Symbol"
   }

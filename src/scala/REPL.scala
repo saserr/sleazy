@@ -27,17 +27,17 @@ class REPL extends Runnable {
     var input = readLine(global) filter {!_.isEmpty}
     while (input.isDefined) {
       val expression = parse(input.get)
-      expression.evaluate(global) match {
+      Evaluate.in(global)(expression) match {
         case Value(()) => /* no result */
         case value =>
-          val name = expression match {
-            case Variable(symbol) => Show(symbol)
-            case _ =>
+          val name =
+            if (expression.is[Symbol]) Show(expression.as[Symbol])
+            else {
               val name = s"res$i"
               global.define(Symbol(name)) = value
               i += 1
               name
-          }
+            }
           println(s"$name: ${Type(value)} = ${Show(value)}")
       }
       input = readLine(global) filter {!_.isEmpty}

@@ -27,7 +27,7 @@ sealed trait Lambda[+A] extends Operation[A] {
   override protected val `type` = "Lambda"
 
   override def apply(operands: List[Expression[Any]], executedIn: Environment) = {
-    val arguments = operands map {_.evaluate(executedIn)}
+    val arguments = operands map Evaluate.in(executedIn)
     invoke(arguments)
   }
 }
@@ -35,7 +35,7 @@ sealed trait Lambda[+A] extends Operation[A] {
 object Lambda {
 
   class BuiltIn[+A](override val formals: List[Symbol])(f: HList => Value[A]) extends Lambda[A] {
-    override protected lazy val show = Show(this)(Lambda.IsShowable)
+    override protected lazy val show = Show(this)(BuiltIn.IsShowable)
     override def invoke(arguments: HList) = f(arguments)
   }
 
@@ -53,18 +53,24 @@ object Lambda {
     }
 
     def apply(formals: String*): Helper = new Helper(formals: _*)
+
+    implicit object IsShowable extends Show[BuiltIn[Any]] {
+      override def apply(lambda: BuiltIn[Any]) = s"(lambda ${Show(lambda.formals)} <built-in>)"
+    }
   }
 
-  case class UserDefined[+A](override val formals: List[Symbol])
-                            (val body: Expression[A], definedIn: Environment) extends Lambda[A] {
+  case class UserDefined(override val formals: List[Symbol])
+                        (val body: Expression[Any], definedIn: Environment) extends Lambda[Any] {
 
-    override protected lazy val show = Show(this)(Lambda.IsShowable)
+    override protected lazy val show = Show(this)(UserDefined.IsShowable)
 
     override def invoke(arguments: HList) =
-      body.evaluate(Environment(Map((formals zip arguments): _*), definedIn.pure[Option]))
+      Evaluate.in(Environment(Map((formals zip arguments): _*), definedIn.pure[Option]))(body)
   }
 
-  implicit object IsShowable extends Show[Lambda[Any]] {
-    override def apply(lambda: Lambda[Any]) = s"<lambda ${Show(lambda.formals)}>"
+  object UserDefined {
+    implicit object IsShowable extends Show[UserDefined] {
+      override def apply(lambda: UserDefined) = s"(lambda ${Show(lambda.formals)} ${Show(lambda.body)})"
+    }
   }
 }

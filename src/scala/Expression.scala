@@ -16,23 +16,30 @@
 
 package org.saserr.sleazy
 
-sealed trait Expression[+A] {
-  def evaluate(environment: Environment): Value[A]
+import scala.reflect.ClassTag
+
+case class Expression[+A: Evaluate : Show](private val value: A) {
+
+  private object evaluate {
+    def in(environment: Environment): Value[Any] = Evaluate.in(environment)(value)
+  }
+  private lazy val show: String = Show(value)
+
+  def as[B: ClassTag](implicit t: Type[B]): B =
+    if (is[B]) value.asInstanceOf[B]
+    else fail(s"$show is not a ${t.name}")
+
+  def is[B](implicit ct: ClassTag[B]): Boolean = ct.runtimeClass.isInstance(value)
 }
 
-case class Constant[+A : Show : Type](value: A) extends Expression[A] {
-  override def evaluate(environment: Environment) = Value(value)
-}
+object Expression {
 
-case class Variable(name: Symbol) extends Expression[Any] {
-  override def evaluate(environment: Environment) = environment.find(name).get
-}
+  implicit object IsEvaluable extends Evaluate[Expression[Any]] {
+    override def apply(expression: Expression[Any], environment: Environment) =
+      expression.evaluate.in(environment)
+  }
 
-case class Expressions(expressions: List[Expression[Any]]) extends Expression[Any] {
-  override def evaluate(environment: Environment) = expressions match {
-    case operation :: operands =>
-      val form = operation.evaluate(environment).as[Operation[Any]]
-      form(operands, environment)
-    case Nil => fail("Nothing to invoke")
+  implicit object IsShowable extends Show[Expression[Any]] {
+    override def apply(expression: Expression[Any]) = expression.show
   }
 }

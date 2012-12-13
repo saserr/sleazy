@@ -34,7 +34,7 @@ trait Simple extends Parser {
       case "(" :: rest =>
         @tailrec def iterate(expressions: List[Expression[Any]], tokens: List[String]): (Expression[Any], List[String]) =
           if (tokens.isEmpty || (tokens.head === ")"))
-            (Expressions(expressions), tokens drop 1)
+            (Expression(expressions), tokens drop 1)
           else {
             val (expression, remaining) = parse(tokens)
             iterate(expressions :+ expression, remaining)
@@ -47,10 +47,10 @@ trait Simple extends Parser {
     }
 
   private def datum(token: String): Expression[Any] = {
-    def literal[A: Parse : Show : Type]: Option[Expression[A]] =
-      Parse[A](token) map Constant[A]
+    def literal[A: Literal : Parse : Show]: Option[Expression[A]] =
+      Parse[A](token) map Expression[A]
 
     val result: Option[Expression[Any]] = literal[Boolean] orElse literal[Number]
-    result | Variable(Symbol(token))
+    result | Expression(Symbol(token))
   }
 }

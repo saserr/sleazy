@@ -25,33 +25,36 @@ trait SpecialForms {
   define('if) = Special("if", "<test>", "<consequent>", "[<alternate>]") {
     (expressions, environment) =>
       val test :: consequent :: _ = expressions
-      if (test.evaluate(environment) === `#f`)
-        ((expressions drop 2).headOption map {_.evaluate(environment)}) | Value(())
-      else consequent.evaluate(environment)
+      if (Evaluate.in(environment)(test) === `#f`)
+        ((expressions drop 2).headOption map Evaluate.in(environment)) | Value(())
+      else Evaluate.in(environment)(consequent)
   }
 
   define(Symbol("set!")) = Special("set!", "<variable>", "<expression>") {
     (expressions, environment) =>
-      val Variable(variable):: expression :: _ = expressions
-      Value(environment.set(variable) = expression.evaluate(environment))
+      val variable :: expression :: _ = expressions
+      Value(environment.set(variable.as[Symbol]) = Evaluate.in(environment)(expression))
   }
   define('define) = Special("define", "<variable>", "<expression>") {
     (expressions, environment) =>
-      val Variable(variable) :: expression :: _ = expressions
-      Value(environment.define(variable) = expression.evaluate(environment))
+      val variable :: expression :: _ = expressions
+      Value(environment.define(variable.as[Symbol]) = Evaluate.in(environment)(expression))
   }
 
   define('lambda) = Special("lambda", "<formals>", "<body>") {
     (expressions, environment) =>
-      val Expressions(formals) :: body :: _ = expressions
-      Value(Lambda.UserDefined(formals.asInstanceOf[List[Variable]] map {_.name})(body, environment))
+      val formals :: body :: _ = expressions
+      implicit object ExpressionsType extends Type[List[Expression[Any]]] {
+        override val name = "Formals"
+      }
+      Value(Lambda.UserDefined(formals.as[List[Expression[Any]]] map {_.as[Symbol]})(body, environment))
   }
 
   define('begin) = Special("begin", "<expression*>") {
     (expressions, environment) =>
       expressions.foldLeft[Value[Any]](Value(())) {
         (_, expression) =>
-          expression.evaluate(environment)
+          Evaluate.in(environment)(expression)
       }
   }
 }

@@ -17,7 +17,8 @@
 package org.saserr.sleazy
 
 package object library extends Showables
-                       with Types {
+                       with Types
+                       with Literals {
 
   type Boolean = scala.Boolean
   type Unit = scala.Unit

@@ -23,6 +23,10 @@ trait Types {
     override val name = "Boolean"
   }
 
+  implicit object HListHasType extends Type[HList] {
+    override val name = "List"
+  }
+
   implicit object UnitHasType extends Type[Unit] {
     override val name = "Void"
   }
