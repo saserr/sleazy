@@ -46,9 +46,11 @@ trait Simple extends Parser {
       case Nil => fail("Unexpected EOF while reading")
     }
 
-  private def datum(token: String): Expression[Any] = token match {
-    case "#t" | "#T" => Constant(true)
-    case "#f" | "#F" => Constant(false)
-    case _ => Number(token).map[Expression[Any]]{Constant(_)} | Variable(Symbol(token))
+  private def datum(token: String): Expression[Any] = {
+    def literal[A: Parse]: Option[Expression[A]] =
+      Parse[A](token) map Constant[A]
+
+    val result: Option[Expression[Any]] = literal[Boolean] orElse literal[Number]
+    result | Variable(Symbol(token))
   }
 }
