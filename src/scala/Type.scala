@@ -16,12 +16,20 @@
 
 package org.saserr.sleazy
 
-package object library extends Showables
-                       with Types {
+trait Type[-A] extends (A => String) {
+  def name: String
+  override def apply(value: A) = name
+}
 
-  type Boolean = scala.Boolean
-  type Unit = scala.Unit
+object Type {
 
-  val `#f`: Value[Boolean] = Value(false)
-  val `#t`: Value[Boolean] = Value(true)
+  def apply[A](value: A)(implicit `type`: Type[A]): String = `type`(value)
+
+  implicit object HListHasType extends Type[HList] {
+    override val name = "List"
+  }
+
+  implicit object SymbolHasType extends Type[Symbol] {
+    override val name = "Symbol"
+  }
 }

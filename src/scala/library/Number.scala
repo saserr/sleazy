@@ -46,6 +46,10 @@ object Number {
       case _: NumberFormatException => None
     }
 
+  implicit object HasType extends Type[Number] {
+    override val name = "Number"
+  }
+
   implicit val isEqualable: Equal[Number] = Equal.equalA
 
   implicit object IsShowable extends Show[Number] {

@@ -47,7 +47,7 @@ trait Simple extends Parser {
     }
 
   private def datum(token: String): Expression[Any] = {
-    def literal[A: Parse : Show]: Option[Expression[A]] =
+    def literal[A: Parse : Show : Type]: Option[Expression[A]] =
       Parse[A](token) map Constant[A]
 
     val result: Option[Expression[Any]] = literal[Boolean] orElse literal[Number]

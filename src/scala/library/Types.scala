@@ -15,13 +15,15 @@
  */
 
 package org.saserr.sleazy
+package library
 
-package object library extends Showables
-                       with Types {
+trait Types {
 
-  type Boolean = scala.Boolean
-  type Unit = scala.Unit
+  implicit object BooleanHasType extends Type[Boolean] {
+    override val name = "Boolean"
+  }
 
-  val `#f`: Value[Boolean] = Value(false)
-  val `#t`: Value[Boolean] = Value(true)
+  implicit object UnitHasType extends Type[Unit] {
+    override val name = "Void"
+  }
 }

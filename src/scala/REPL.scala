@@ -38,7 +38,7 @@ class REPL extends Runnable {
               i += 1
               name
           }
-          println(s"$name = ${Show(value)}")
+          println(s"$name: ${Type(value)} = ${Show(value)}")
       }
       input = readLine(global) filter {!_.isEmpty}
     }

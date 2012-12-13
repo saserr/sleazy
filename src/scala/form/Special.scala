@@ -22,6 +22,7 @@ trait Special[+A] extends Operation[A] {
   def syntax: List[Symbol]
 
   override protected lazy val show = Show(this)(Special.IsShowable)
+  override protected val `type` = "Special"
 }
 
 object Special {

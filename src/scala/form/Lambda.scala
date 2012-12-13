@@ -24,6 +24,8 @@ sealed trait Lambda[+A] extends Operation[A] {
   def formals: List[Symbol]
   def invoke(arguments: HList): Value[A]
 
+  override protected val `type` = "Lambda"
+
   override def apply(operands: List[Expression[Any]], executedIn: Environment) = {
     val arguments = operands map {_.evaluate(executedIn)}
     invoke(arguments)
@@ -44,7 +46,7 @@ object Lambda {
       def apply[A](f: HList => Value[A]): Value[BuiltIn[A]] =
         Value(new BuiltIn(formals.toList map {Symbol(_)})(f))
 
-      def apply[A: Manifest, B](f: Seq[A] => Value[B]): Value[BuiltIn[B]] = apply {
+      def apply[A: Manifest : Type, B](f: Seq[A] => Value[B]): Value[BuiltIn[B]] = apply {
         arguments: HList =>
           f(arguments map {_.as[A]})
       }
